@@ -15,8 +15,10 @@ from dropbox import DropboxOAuth2FlowNoRedirect
 
 from helpers import RemoteFile, with_retry
 
-# Transient conditions worth retrying.
-_NET_ERRORS = (requests.exceptions.RequestException, ConnectionError, TimeoutError)
+# Transient conditions worth retrying. Dropbox SDK errors don't inherit from
+# requests' exceptions, so the retriable Dropbox ones are listed explicitly.
+_NET_ERRORS = (requests.exceptions.RequestException, ConnectionError, TimeoutError,
+               dropbox.exceptions.RateLimitError, dropbox.exceptions.InternalServerError)
 
 
 class DropboxClient:
@@ -151,7 +153,7 @@ class PhotosClient:
                        json_body=body)
         result = r.json()["newMediaItemResults"][0]
         status = result.get("status", {})
-        # google.rpc.Status: code 0 (or absent) / message "Success" == OK
-        if status.get("code", 0) not in (0,) and status.get("message") != "Success":
+        # google.rpc.Status: code 0 (or absent) == OK; anything else is a failure.
+        if status.get("code", 0) != 0:
             raise RuntimeError(f"batchCreate failed for {name}: {status}")
         return result["mediaItem"]["id"]
