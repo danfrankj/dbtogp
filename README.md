@@ -7,12 +7,15 @@ then deletes it from Dropbox. Safe to interrupt and re-run — a JSON ledger in
 
 ## Use
 
-See `SETUP.md` for the one-time OAuth setup, then:
+Install dependencies with [uv](https://docs.astral.sh/uv/) (`uv sync` creates the
+`.venv` and resolves everything from `pyproject.toml`/`uv.lock`). See `SETUP.md` for
+the one-time OAuth setup, then:
 
 ```bash
+uv sync
 export DROPBOX_APP_KEY=...
-.venv/bin/python dbtogp.py --folder "/Camera Uploads" --album "My Album" --dry-run  # preview
-.venv/bin/python dbtogp.py --folder "/Camera Uploads" --album "My Album"            # for real
+uv run python dbtogp.py --folder "/Camera Uploads" --album "My Album" --dry-run  # preview
+uv run python dbtogp.py --folder "/Camera Uploads" --album "My Album"            # for real
 ```
 
 ## Notes / limitations
@@ -26,5 +29,5 @@ export DROPBOX_APP_KEY=...
 ## Tests
 
 ```bash
-.venv/bin/pytest -v
+uv run pytest -v
 ```

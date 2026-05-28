@@ -29,8 +29,9 @@ You need two OAuth apps (one-time). Both are free.
 ## First run
 
 ```bash
+uv sync                          # one-time: install deps into .venv
 export DROPBOX_APP_KEY=your_app_key_here
-.venv/bin/python dbtogp.py --folder "/Camera Uploads" --album "My Album" --dry-run
+uv run python dbtogp.py --folder "/Camera Uploads" --album "My Album" --dry-run
 ```
 
 The first run opens a browser for Google sign-in and prints a Dropbox auth URL to

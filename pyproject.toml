@@ -1,0 +1,17 @@
+[project]
+name = "dbtogp"
+version = "0.1.0"
+description = "Move a Dropbox folder into a Google Photos album"
+requires-python = ">=3.9"
+dependencies = [
+    "dropbox>=12,<13",
+    "google-auth-oauthlib>=1.2,<2",
+    "requests>=2.31",
+]
+
+[dependency-groups]
+dev = ["pytest>=8.0"]
+
+[tool.uv]
+# This is an application, not a library to build/install — just manage its deps.
+package = false
