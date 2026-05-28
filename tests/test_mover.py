@@ -54,8 +54,8 @@ def test_upload_happy_path(tmp_path):
     assert dbx.deleted == ["id:1"]
     assert led.status("id:1") == "deleted"
     assert led.data["files"]["id:1"]["media_item_id"] == "media-f1.jpg"
-    # temp file cleaned up
-    assert list(tmp_path.glob("*.tmp")) == []
+    # downloaded temp file was removed (only the ledger json remains)
+    assert not any("f1.jpg" in f.name for f in tmp_path.iterdir())
 
 
 def test_delete_only_action(tmp_path):
@@ -78,7 +78,7 @@ def test_upload_failure_leaves_file_and_does_not_delete(tmp_path):
                  NullReporter(), str(tmp_path), dry_run=False)
     assert dbx.deleted == []                 # never deleted on upload failure
     assert led.status("id:1") in ("absent",) # not marked uploaded
-    assert list(tmp_path.glob("*.tmp")) == []  # temp still cleaned
+    assert not any("f1.jpg" in f.name for f in tmp_path.iterdir())  # temp still cleaned
 
 
 def test_crash_after_upload_recovers_as_delete_only(tmp_path):
