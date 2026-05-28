@@ -1,0 +1,4 @@
+dropbox>=12,<13
+google-auth-oauthlib>=1.2,<2
+requests>=2.31
+pytest>=8.0
