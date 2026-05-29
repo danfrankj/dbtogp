@@ -11,6 +11,7 @@ dependencies = [
 
 [project.scripts]
 dbtogp = "dbtogp:main"
+dbtogp-auth = "authcheck:main"
 
 [dependency-groups]
 dev = ["pytest>=8.0"]
@@ -21,7 +22,7 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
 # Flat top-level modules (no package dir) — list them so the entry point resolves.
-py-modules = ["dbtogp", "clients", "helpers", "ledger", "mover", "reconcile"]
+py-modules = ["dbtogp", "authcheck", "clients", "helpers", "ledger", "mover", "reconcile"]
 
 [tool.uv]
 package = true

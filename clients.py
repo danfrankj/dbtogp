@@ -75,6 +75,13 @@ class DropboxClient:
         with_retry(lambda: self._dbx.files_delete_v2(file_id),
                    retry_on=_NET_ERRORS)
 
+    def verify(self):
+        """Cheap, side-effect-free call using files.metadata.read (the same scope
+        the mover needs) to force a token refresh and prove the credentials work.
+        Avoids users_get_current_account, which would require account_info.read."""
+        with_retry(lambda: self._dbx.files_list_folder("", limit=1),
+                   retry_on=_NET_ERRORS)
+
 
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials

@@ -28,12 +28,13 @@ def parse_args(argv):
     return p.parse_args(argv)
 
 
-def main(argv=None):
-    args = parse_args(argv if argv is not None else sys.argv[1:])
-
-    config_dir = os.path.abspath(args.config_dir)
+def resolve_creds(config_dir_arg, client_secret_arg=None):
+    """Resolve the config dir and both credential locations, exiting with a
+    helpful message if either is missing. Shared by the mover and the auth check."""
+    config_dir = os.path.abspath(config_dir_arg)
     os.makedirs(config_dir, exist_ok=True)
-    client_secret = args.client_secret or os.path.join(config_dir, "client_secret.json")
+
+    client_secret = client_secret_arg or os.path.join(config_dir, "client_secret.json")
     if not os.path.exists(client_secret):
         sys.exit(f"ERROR: Google client secret not found at {client_secret} (see SETUP.md).")
 
@@ -44,6 +45,14 @@ def main(argv=None):
         app_key = open(key_file).read().strip()
     if not app_key:
         sys.exit(f"ERROR: set DROPBOX_APP_KEY or write it to {key_file} (see SETUP.md).")
+
+    return config_dir, client_secret, app_key
+
+
+def main(argv=None):
+    args = parse_args(argv if argv is not None else sys.argv[1:])
+
+    config_dir, client_secret, app_key = resolve_creds(args.config_dir, args.client_secret)
 
     print("=" * 60)
     print("REMINDER: Google Photos must be set to 'Original quality'")

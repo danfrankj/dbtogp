@@ -13,7 +13,8 @@ the one-time OAuth setup, then:
 
 ```bash
 uv sync
-export DROPBOX_APP_KEY=...
+export DROPBOX_APP_KEY=...                                            # or .dbtogp/dropbox_app_key
+uv run dbtogp-auth                                                    # verify both logins first
 uv run dbtogp --folder "/Camera Uploads" --album "My Album" --dry-run  # preview
 uv run dbtogp --folder "/Camera Uploads" --album "My Album"            # for real
 ```
