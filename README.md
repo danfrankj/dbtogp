@@ -17,6 +17,7 @@ export DROPBOX_APP_KEY=...                                            # or .dbto
 uv run dbtogp-auth                                                    # verify both logins first
 uv run dbtogp --folder "/Camera Uploads" --album "My Album" --dry-run  # preview
 uv run dbtogp --folder "/Camera Uploads" --album "My Album"            # for real
+uv run dbtogp --folder "/Camera Uploads" --dry-run                     # album defaults to "Camera Uploads"
 ```
 
 ## Notes / limitations

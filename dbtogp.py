@@ -18,7 +18,8 @@ from mover import run, ConsoleReporter
 def parse_args(argv):
     p = argparse.ArgumentParser(description="Move a Dropbox folder to a Google Photos album.")
     p.add_argument("--folder", required=True, help="Dropbox folder path, e.g. /Trip")
-    p.add_argument("--album", required=True, help="Google Photos album name")
+    p.add_argument("--album", default=None,
+                   help="Google Photos album name (default: the folder's name)")
     p.add_argument("--config-dir", default=os.path.join(os.path.dirname(__file__), ".dbtogp"),
                    help="Where tokens, ledger and log live (default .dbtogp/)")
     p.add_argument("--client-secret", default=None,
@@ -49,6 +50,12 @@ def resolve_creds(config_dir_arg, client_secret_arg=None):
     return config_dir, client_secret, app_key
 
 
+def album_from_folder(folder):
+    """The Dropbox folder's own name, e.g. /photos/Trip 2024/ -> 'Trip 2024'.
+    Empty only for the root, which the caller rejects."""
+    return folder.rstrip("/").rsplit("/", 1)[-1]
+
+
 def folder_is_emptied(errors, subfolders, files):
     """After a run, the folder is safe to offer for deletion only if nothing
     failed and a fresh listing shows it completely empty (no leftovers)."""
@@ -57,6 +64,10 @@ def folder_is_emptied(errors, subfolders, files):
 
 def main(argv=None):
     args = parse_args(argv if argv is not None else sys.argv[1:])
+
+    album = args.album or album_from_folder(args.folder)
+    if not album:
+        sys.exit("ERROR: could not derive an album name from --folder; pass --album.")
 
     config_dir, client_secret, app_key = resolve_creds(args.config_dir, args.client_secret)
 
@@ -80,15 +91,15 @@ def main(argv=None):
     if skipped_nonmedia:
         print(f"Skipping {skipped_nonmedia} non-media file(s).")
 
-    ledger = Ledger.load(os.path.join(config_dir, slugify(args.album) + ".json"))
+    ledger = Ledger.load(os.path.join(config_dir, slugify(album) + ".json"))
 
     if args.dry_run:
         album_id = ledger.album_id() or "<dry-run-no-album>"
     else:
         album_id = ledger.album_id()
         if not album_id:
-            album_id = photos.ensure_album(args.album)
-            ledger.set_album(album_id, args.album, args.folder)
+            album_id = photos.ensure_album(album)
+            ledger.set_album(album_id, album, args.folder)
 
     result = run(media, dbx, photos, ledger, album_id, ConsoleReporter(),
                  config_dir, args.dry_run)
