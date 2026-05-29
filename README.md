@@ -20,6 +20,16 @@ uv run dbtogp --folder "/Camera Uploads" --album "My Album"            # for rea
 uv run dbtogp --folder "/Camera Uploads" --dry-run                     # album defaults to "Camera Uploads"
 ```
 
+Many folders at once — one album each, deleting each folder as it empties, with
+no prompts:
+
+```bash
+while IFS= read -r folder; do
+  [ -z "$folder" ] && continue
+  uv run dbtogp --folder "$folder" --delete-empty
+done < folders.txt
+```
+
 ## Notes / limitations
 
 - The folder must have **no subfolders** (the script aborts if it finds any).
@@ -28,7 +38,8 @@ uv run dbtogp --folder "/Camera Uploads" --dry-run                     # album d
 - A tiny window exists between "added to album" and the ledger write; a crash there
   is recovered as a delete on the next run (no double upload).
 - After a clean run (no errors), if the Dropbox folder is left completely empty the
-  script offers to delete it. Declined by default — press `y` to remove it.
+  script offers to delete it. Declined by default — press `y` to remove it, or pass
+  `--delete-empty` to remove it automatically (for unattended/batch runs).
 
 ## Tests
 

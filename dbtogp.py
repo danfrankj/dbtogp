@@ -26,6 +26,9 @@ def parse_args(argv):
                    help="Path to Google client_secret.json (default <config-dir>/client_secret.json)")
     p.add_argument("--dry-run", action="store_true",
                    help="List what would happen; upload/delete nothing.")
+    p.add_argument("--delete-empty", action="store_true",
+                   help="After a clean run, delete the emptied folder without prompting "
+                        "(for unattended/batch runs).")
     return p.parse_args(argv)
 
 
@@ -110,11 +113,15 @@ def main(argv=None):
         # files_list_folder tolerates; strip it, and never offer to delete root.
         folder = args.folder.rstrip("/")
         if folder and folder_is_emptied(result["errors"], subfolders, files):
-            try:
-                answer = input(f'\nDelete now-empty folder "{folder}"? [y/N] ')
-            except EOFError:
-                answer = ""  # non-interactive: keep the folder
-            if answer.strip().lower() in ("y", "yes"):
+            if args.delete_empty:
+                confirmed = True
+            else:
+                try:
+                    answer = input(f'\nDelete now-empty folder "{folder}"? [y/N] ')
+                except EOFError:
+                    answer = ""  # non-interactive: keep the folder
+                confirmed = answer.strip().lower() in ("y", "yes")
+            if confirmed:
                 dbx.delete(folder)
                 print(f'Deleted {folder}.')
 
