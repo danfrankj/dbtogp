@@ -83,8 +83,13 @@ def main(argv=None):
     dbx = DropboxClient(app_key, os.path.join(config_dir, "dropbox_token.json"))
     photos = PhotosClient(client_secret, os.path.join(config_dir, "google_token.json"))
 
-    # Precondition: list folder, assert no subfolders.
-    subfolders, files = dbx.list_folder(args.folder)
+    # Precondition: list folder, assert no subfolders. A missing folder means a
+    # prior run already moved and deleted it, so there's nothing left to do.
+    try:
+        subfolders, files = dbx.list_folder(args.folder)
+    except FileNotFoundError:
+        print(f"Folder {args.folder} not found — already moved, nothing to do.")
+        return
     if subfolders:
         sys.exit("ERROR: folder contains subfolders, which is not supported:\n  - "
                  + "\n  - ".join(subfolders))

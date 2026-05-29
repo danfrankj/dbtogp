@@ -21,6 +21,15 @@ _NET_ERRORS = (requests.exceptions.RequestException, ConnectionError, TimeoutErr
                dropbox.exceptions.RateLimitError, dropbox.exceptions.InternalServerError)
 
 
+def _is_not_found(api_error):
+    """True if a Dropbox ApiError is a path 'not_found' lookup (folder gone)."""
+    err = getattr(api_error, "error", None)
+    try:
+        return err.is_path() and err.get_path().is_not_found()
+    except AttributeError:
+        return False
+
+
 class DropboxClient:
     def __init__(self, app_key, token_path):
         self._app_key = app_key
@@ -49,10 +58,17 @@ class DropboxClient:
         return result.refresh_token
 
     def list_folder(self, path):
-        """Return (subfolder_names, [RemoteFile]). Top level only."""
+        """Return (subfolder_names, [RemoteFile]). Top level only.
+        Raises FileNotFoundError (not the SDK's ApiError) if the path is gone,
+        so callers can treat an already-deleted folder as 'nothing to do'."""
         subfolders, files = [], []
-        res = with_retry(lambda: self._dbx.files_list_folder(path),
-                         retry_on=_NET_ERRORS)
+        try:
+            res = with_retry(lambda: self._dbx.files_list_folder(path),
+                             retry_on=_NET_ERRORS)
+        except dropbox.exceptions.ApiError as e:
+            if _is_not_found(e):
+                raise FileNotFoundError(path) from e
+            raise
         while True:
             for entry in res.entries:
                 if isinstance(entry, FolderMetadata):
