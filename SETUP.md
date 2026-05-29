@@ -22,16 +22,17 @@ You need two OAuth apps (one-time). Both are free.
 2. Choose "Scoped access" and "Full Dropbox" (or App folder if your photos are there).
 3. In the app's **Permissions** tab, enable:
    `files.metadata.read`, `files.content.read`, `files.content.write`. Submit.
-4. On the app's Settings tab, copy the **App key**. Export it before running:
-   `export DROPBOX_APP_KEY=your_app_key_here`
-   (No app secret is needed — the script uses PKCE.)
+4. On the app's Settings tab, copy the **App key**. Give it to the script either way:
+   - env var: `export DROPBOX_APP_KEY=your_app_key_here`, or
+   - file: `echo your_app_key_here > .dbtogp/dropbox_app_key`
+   The env var wins if both are set. (No app secret is needed — the script uses PKCE.)
 
 ## First run
 
 ```bash
 uv sync                          # one-time: install deps into .venv
-export DROPBOX_APP_KEY=your_app_key_here
-uv run python dbtogp.py --folder "/Camera Uploads" --album "My Album" --dry-run
+export DROPBOX_APP_KEY=your_app_key_here   # or: echo ... > .dbtogp/dropbox_app_key
+uv run dbtogp --folder "/Camera Uploads" --album "My Album" --dry-run
 ```
 
 The first run opens a browser for Google sign-in and prints a Dropbox auth URL to

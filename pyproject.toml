@@ -9,9 +9,19 @@ dependencies = [
     "requests>=2.31",
 ]
 
+[project.scripts]
+dbtogp = "dbtogp:main"
+
 [dependency-groups]
 dev = ["pytest>=8.0"]
 
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+# Flat top-level modules (no package dir) — list them so the entry point resolves.
+py-modules = ["dbtogp", "clients", "helpers", "ledger", "mover", "reconcile"]
+
 [tool.uv]
-# This is an application, not a library to build/install — just manage its deps.
-package = false
+package = true

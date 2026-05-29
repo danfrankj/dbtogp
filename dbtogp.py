@@ -14,9 +14,6 @@ from helpers import slugify, is_media_file
 from ledger import Ledger
 from mover import run, ConsoleReporter
 
-# Public Dropbox app key created per SETUP.md (PKCE app, no secret needed).
-DROPBOX_APP_KEY = os.environ.get("DROPBOX_APP_KEY", "")
-
 
 def parse_args(argv):
     p = argparse.ArgumentParser(description="Move a Dropbox folder to a Google Photos album.")
@@ -34,14 +31,19 @@ def parse_args(argv):
 def main(argv=None):
     args = parse_args(argv if argv is not None else sys.argv[1:])
 
-    if not DROPBOX_APP_KEY:
-        sys.exit("ERROR: set DROPBOX_APP_KEY (see SETUP.md).")
-
     config_dir = os.path.abspath(args.config_dir)
     os.makedirs(config_dir, exist_ok=True)
     client_secret = args.client_secret or os.path.join(config_dir, "client_secret.json")
     if not os.path.exists(client_secret):
         sys.exit(f"ERROR: Google client secret not found at {client_secret} (see SETUP.md).")
+
+    # Public Dropbox app key (PKCE app, no secret needed): env var wins, else a file.
+    key_file = os.path.join(config_dir, "dropbox_app_key")
+    app_key = os.environ.get("DROPBOX_APP_KEY", "")
+    if not app_key and os.path.exists(key_file):
+        app_key = open(key_file).read().strip()
+    if not app_key:
+        sys.exit(f"ERROR: set DROPBOX_APP_KEY or write it to {key_file} (see SETUP.md).")
 
     print("=" * 60)
     print("REMINDER: Google Photos must be set to 'Original quality'")
@@ -49,7 +51,7 @@ def main(argv=None):
     print("will be downscaled. The script cannot check or change this.")
     print("=" * 60)
 
-    dbx = DropboxClient(DROPBOX_APP_KEY, os.path.join(config_dir, "dropbox_token.json"))
+    dbx = DropboxClient(app_key, os.path.join(config_dir, "dropbox_token.json"))
     photos = PhotosClient(client_secret, os.path.join(config_dir, "google_token.json"))
 
     # Precondition: list folder, assert no subfolders.

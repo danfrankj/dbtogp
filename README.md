@@ -14,8 +14,8 @@ the one-time OAuth setup, then:
 ```bash
 uv sync
 export DROPBOX_APP_KEY=...
-uv run python dbtogp.py --folder "/Camera Uploads" --album "My Album" --dry-run  # preview
-uv run python dbtogp.py --folder "/Camera Uploads" --album "My Album"            # for real
+uv run dbtogp --folder "/Camera Uploads" --album "My Album" --dry-run  # preview
+uv run dbtogp --folder "/Camera Uploads" --album "My Album"            # for real
 ```
 
 ## Notes / limitations
