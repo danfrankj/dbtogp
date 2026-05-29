@@ -49,6 +49,12 @@ def resolve_creds(config_dir_arg, client_secret_arg=None):
     return config_dir, client_secret, app_key
 
 
+def folder_is_emptied(errors, subfolders, files):
+    """After a run, the folder is safe to offer for deletion only if nothing
+    failed and a fresh listing shows it completely empty (no leftovers)."""
+    return errors == 0 and not subfolders and not files
+
+
 def main(argv=None):
     args = parse_args(argv if argv is not None else sys.argv[1:])
 
@@ -84,8 +90,22 @@ def main(argv=None):
             album_id = photos.ensure_album(args.album)
             ledger.set_album(album_id, args.album, args.folder)
 
-    run(media, dbx, photos, ledger, album_id, ConsoleReporter(),
-        config_dir, args.dry_run)
+    result = run(media, dbx, photos, ledger, album_id, ConsoleReporter(),
+                 config_dir, args.dry_run)
+
+    if not args.dry_run:
+        subfolders, files = dbx.list_folder(args.folder)  # fresh listing post-move
+        # files_delete_v2 rejects a trailing slash (malformed_path) that
+        # files_list_folder tolerates; strip it, and never offer to delete root.
+        folder = args.folder.rstrip("/")
+        if folder and folder_is_emptied(result["errors"], subfolders, files):
+            try:
+                answer = input(f'\nDelete now-empty folder "{folder}"? [y/N] ')
+            except EOFError:
+                answer = ""  # non-interactive: keep the folder
+            if answer.strip().lower() in ("y", "yes"):
+                dbx.delete(folder)
+                print(f'Deleted {folder}.')
 
 
 if __name__ == "__main__":

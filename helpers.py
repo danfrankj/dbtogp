@@ -48,9 +48,11 @@ def tally_line(done, errors, left, bytes_done, bytes_total):
             f"· {human_size(bytes_done)} / {human_size(bytes_total)}")
 
 
-def with_retry(fn, attempts=5, base=1.0, sleep=None, retry_on=(Exception,)):
+def with_retry(fn, attempts=5, base=1.0, sleep=None, retry_on=(Exception,), backoff=None):
     """Call fn(); on a ret_on exception, back off exponentially and retry.
-    `sleep` is injectable for tests. Re-raises the last error after `attempts`."""
+    `sleep` is injectable for tests. Re-raises the last error after `attempts`.
+    `backoff(error, default_wait)` may override the wait — e.g. to honor an
+    HTTP 429 Retry-After header instead of the generic exponential default."""
     # Clients pass a narrow retry_on (HTTP 429/5xx + network errors). The default
     # is broad only so tests can use ValueError; production callers MUST narrow it.
     import time
@@ -62,5 +64,6 @@ def with_retry(fn, attempts=5, base=1.0, sleep=None, retry_on=(Exception,)):
         except retry_on as e:
             last = e
             if i < attempts - 1:
-                sleep(base * (2 ** i))
+                wait = base * (2 ** i)
+                sleep(backoff(e, wait) if backoff else wait)
     raise last

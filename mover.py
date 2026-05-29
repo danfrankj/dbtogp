@@ -50,16 +50,16 @@ def move_one(item, dbx, photos, ledger, album_id, reporter, tmp_dir, dry_run):
 
     if item.action == "delete_only":
         if dry_run:
-            reporter.step("would delete", True)
+            reporter.step("🗑️ would delete", True)
             return
         dbx.delete(rf.id)
-        reporter.step("delete", True)
+        reporter.step("🗑️ delete", True)
         ledger.mark(rf.id, "deleted", name=rf.name, size=rf.size)
         return
 
     # action == "upload"
     if dry_run:
-        reporter.step("would upload + delete", True)
+        reporter.step("📤🗑️ would upload + delete", True)
         return
 
     # Unique temp name so concurrent ids never collide (id contains ':').
@@ -67,20 +67,20 @@ def move_one(item, dbx, photos, ledger, album_id, reporter, tmp_dir, dry_run):
     tmp = os.path.join(tmp_dir, f"{safe}__{rf.name}")
     try:
         dbx.download(rf.id, tmp)
-        reporter.step("download", True)
+        reporter.step("📥 download", True)
 
         token = photos.upload_bytes(tmp, rf.name)
-        reporter.step("upload", True)
+        reporter.step("📤 upload", True)
 
         media_id = photos.add_to_album(album_id, token, rf.name)
-        reporter.step("album", True)
+        reporter.step("📸 album", True)
 
         # Record success BEFORE deleting: a crash here recovers as delete_only.
         ledger.mark(rf.id, "uploaded", name=rf.name, size=rf.size,
                     media_item_id=media_id)
 
         dbx.delete(rf.id)
-        reporter.step("delete", True)
+        reporter.step("🗑️ delete", True)
         ledger.mark(rf.id, "deleted", name=rf.name, size=rf.size)
     finally:
         if os.path.exists(tmp):

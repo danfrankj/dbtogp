@@ -70,3 +70,19 @@ def test_with_retry_gives_up_and_raises():
 
     with pytest.raises(ValueError):
         with_retry(always_fail, attempts=3, base=0.01, sleep=lambda s: None)
+
+
+def test_with_retry_backoff_hook_overrides_wait():
+    slept = []
+    state = {"n": 0}
+
+    def flaky():
+        state["n"] += 1
+        if state["n"] < 3:
+            raise ValueError("transient")
+        return "ok"
+
+    # backoff hook ignores the exponential default and always asks for 9s.
+    with_retry(flaky, attempts=5, base=1.0, sleep=slept.append,
+               backoff=lambda e, default: 9)
+    assert slept == [9, 9]

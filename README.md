@@ -26,6 +26,8 @@ uv run dbtogp --folder "/Camera Uploads" --album "My Album"            # for rea
 - Albums are created by the script; it can't add to an album you made by hand.
 - A tiny window exists between "added to album" and the ledger write; a crash there
   is recovered as a delete on the next run (no double upload).
+- After a clean run (no errors), if the Dropbox folder is left completely empty the
+  script offers to delete it. Declined by default — press `y` to remove it.
 
 ## Tests
 

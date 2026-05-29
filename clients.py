@@ -91,6 +91,17 @@ _PHOTOS_SCOPES = ["https://www.googleapis.com/auth/photoslibrary.appendonly"]
 _API = "https://photoslibrary.googleapis.com/v1"
 
 
+def _throttle_backoff(error, default_wait):
+    """Backoff hook for with_retry. On HTTP 429, wait the server-specified
+    Retry-After if present; otherwise hold for at least 30s, since the Photos
+    rate-limit window is minute-scale and the exponential default is too short."""
+    resp = getattr(error, "response", None)
+    if resp is None or resp.status_code != 429:
+        return default_wait
+    hdr = (resp.headers.get("Retry-After") or "").strip()
+    return int(hdr) if hdr.isdigit() else max(default_wait, 30)
+
+
 class PhotosClient:
     def __init__(self, client_secret_path, token_path):
         self._token_path = token_path
@@ -128,7 +139,7 @@ class PhotosClient:
             r.raise_for_status()
             return r
         return with_retry(do, retry_on=(requests.exceptions.RequestException,),
-                          attempts=5)
+                          attempts=7, backoff=_throttle_backoff)
 
     def ensure_album(self, title):
         """Create an album the API owns; return its id."""
